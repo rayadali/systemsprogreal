@@ -2,21 +2,24 @@
  * tokenizer.c
  *Rayad Ali
  */
+#define _GNU_SOURCE
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
 /*
  * Tokenizer type.  You need to fill in the type as part of your implementation.
  */
 
-struct TokenizerT_ {
+//struct TokenizerT_ {
+typedef struct TokenizerT_{
     //char separatorChars[50]; // first command line string storage
    // char tokens[]; //second command line string.  pass by reference
     // using pointers as required in the PDF outline
     char *separators;
     char *tokens;
 }TokenizerT;
-
-typedef struct TokenizerT_ TokenizerT;
+//typedef struct TokenizerT_ TokenizerT;
 
 /*
  * TKCreate creates a new TokenizerT object for a given set of separator
@@ -43,21 +46,46 @@ char sepArray[strlen(separators)]; // length is determined by the length of stri
 int countSep = 0; //keep count of the number and store, initialized to 0
 */
 
-Tokenizer T *tokeniser =  malloc(sizeof *tokeniser);
 // using memcpy over strcpy for performance
 // note for how malloc, memcpy works
 // malloc creates a memory block of size in parameter
 // void * memcpy ( void * destination, const void * source, size_t num );
 //separators
-    size_t slength = strlen(separators)+1;
+    /*
+    TokenizerT *tokeniser;
+    tokeniser = (TokenizerT *) malloc(sizeof *tokeniser);
+    size_t slength;
+    slength = strlen(separators) + 1;
+    char *sep;
+    sep = malloc(slength);
+    memcpy(sep, separators, slength);
+    tokeniser->separators = sep;
+     */
+    
+    //testing
+    
+    printf("from create %s\n",separators);
+    printf("from create %s\n",ts);
+    
+    TokenizerT *tokeniser =  malloc(sizeof *tokeniser);
+    size_t slength = (strlen(separators)+1);
     char *sep = malloc(slength); // creating memory space we add +1 for the \0
     memcpy(sep, separators, slength); // copies value in separators paramater passed into funtion to sep, length size of separators
     tokeniser->separators = sep;
+    
+    //
+    
+    printf("after create %s\n",sep);
+
 //tokens
     size_t tlength = strlen(ts)+1;
     char *tok = malloc(tlength);
     memcpy(tok, ts, tlength);
     tokeniser->tokens = tok;
+    
+    //testing
+    
+    printf("after create %s\n",tok);
     
   return tokeniser;
 }
@@ -107,8 +135,11 @@ char *TKGetNextToken(TokenizerT *tk) {
     //creating variables
     char *nextToken = (char *)malloc(strlen(tk->tokens)+1);
     char *delimiter, *tokenPtr, *check = NULL;
-    *tokenPtr = tk->tokens;
-    *nextToken = NULL;
+    //*tokenPtr = tk->tokens; //getting error 
+    //*nextToken = NULL; // getting error
+    tokenPtr = tk->tokens;
+    nextToken = NULL;
+    
     //error handling for empty second string
     if(!tk->tokens) return NULL;
     if(tk->tokens == '\0') return NULL;
@@ -116,7 +147,8 @@ char *TKGetNextToken(TokenizerT *tk) {
     while(tokenPtr[0] != '\0') //loop delimiter string until end
     {
         delimiter = tk->separators; //storing the separators to look out for
-        if ((tk->tokens) == *delimiter){ //match
+        //if ((tk->tokens) == *delimiter){ //match , getting error 
+        if ((tk->tokens) == delimiter){
             if(tokenPtr == check){
                 check++;//skip this
                 break; // end this iteration
@@ -124,23 +156,23 @@ char *TKGetNextToken(TokenizerT *tk) {
             else{
                 *tokenPtr = '\0'; //set to null character
                 tokenPtr++; //move to next
-                if((nextToken = malloc(sizeof check) + 1 * sizeof(char) != NULL)
-                {
+                //if((nextToken = malloc(sizeof check) + 1 * sizeof(char) != NULL)){ // getting error
+                if((*nextToken = malloc(sizeof check) + 1 * sizeof(char) != NULL)){
                     size_t tokenLength = strlen(check)+1; 
                     memcpy(nextToken, check, tokenLength); //getting the token and storing again using memcpy
                     tk->tokens = tokenPtr;
+                    //testing
+                    printf("end of%s\n",nextToken);
                     return nextToken;
                 }
             }
-        else
-            {
+        }
+        else{
             delimiter++; // check for next
             }
         }
     tokenPtr++;// iterate to next delimiter
-    }
-    if((nextToken = malloc(sizeof check) + 1 * sizeof(char)) != NULL)
-    {
+    if((nextToken = malloc(sizeof check) + 1 * sizeof(char)) != NULL){
         size_t tokenLength = strlen(check)+1; 
         memcpy(nextToken, check, tokenLength);
     }
@@ -158,6 +190,29 @@ char *TKGetNextToken(TokenizerT *tk) {
  */
 
 int main(int argc, char **argv) {
+    
+    // testing
+    char name[]="ray";
+    printf("%s\n",name);
+    
+    if (argc != 3) {
+        printf("Invalid input. Require two string inputs\n");
+        return 1;
+    }
+    char *token;
+    char *seps = argv[1];
+    //test vars getting stored correctly
+    printf("%s\n",seps);
+    char *string = argv[2];
+    printf("%s\n",string);
+    TokenizerT *stream = TKCreate(seps, string);
+    while ((token = TKGetNextToken(stream)) != NULL ) {
+        printf("%s\n", token);
+        free(token); //freeing after processed
+    }
+
+    //free(token);
+    TKDestroy(stream);
 
   return 0;
 }
